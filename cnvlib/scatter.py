@@ -372,11 +372,11 @@ def cnv_on_chromosome(axis, probes, segments, genes, antitarget_marker=None,
         else:
             y_min_cutoff = -5.0
             tmp_y_min = min(y.min() - .1, -.3)
-            hidden_probes = sum(y - .1 < y_min_cutoff)
-            if hidden_probes:
+            hidden_probes = (y - .1 < y_min_cutoff)
+            if hidden_probes.sum():
                 logging.warning("Setting default '--y-min=-5' so %s probes are "
                                 "hidden --> Use parameter '--y-min %s' to see them", 
-                                hidden_probes, y.min())
+                                hidden_probes.sum(), y.min())
             y_min = max(y_min_cutoff, tmp_y_min)
     if not y_max:
         y_max = max(.3, y.max() + (.25 if genes else .1)) if len(y) else 1.1
@@ -427,6 +427,10 @@ def cnv_on_chromosome(axis, probes, segments, genes, antitarget_marker=None,
             axis.plot((row.start * MB, row.end * MB),
                       (row.log2, row.log2),
                       color=color, linewidth=4, solid_capstyle='round', snap=False)
+    
+    if hidden_probes.sum():
+        axis.set_ylim(y_min - 1, y_max)
+        axis.axhline(y=y_min, color='red')
     return axis
 
 def snv_on_chromosome(axis, variants, segments, genes, do_trend, by_bin,
