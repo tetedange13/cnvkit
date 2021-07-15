@@ -374,10 +374,10 @@ def cnv_on_chromosome(axis, probes, segments, genes, antitarget_marker=None,
             tmp_y_min = min(y.min() - .1, -.3)
             hidden_probes = (y - .1 < y_min_cutoff)
             if hidden_probes.sum():
-                logging.warning("WARNING: Setting default '--y-min=-5' "
+                logging.warning("WARNING: Setting default 'y_min=%s' "
                                 "so %s probes are hidden"
                                 " --> Use parameter '--y-min %s' to see them", 
-                                hidden_probes.sum(), y.min())
+                                y_min_cutoff, hidden_probes.sum(), y.min())
             y_min = max(y_min_cutoff, tmp_y_min)
     if not y_max:
         y_max = max(.3, y.max() + (.25 if genes else .1)) if len(y) else 1.1
