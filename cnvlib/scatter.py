@@ -367,18 +367,7 @@ def cnv_on_chromosome(axis, probes, segments, genes, antitarget_marker=None,
 
     # Configure axes
     if not y_min:
-        if not len(y):
-            y_min = -1.1
-        else:
-            y_min_cutoff = -5.0
-            tmp_y_min = min(y.min() - .1, -.3)
-            hidden_probes = (y - .1 < y_min_cutoff)
-            if hidden_probes.sum():
-                logging.warning("WARNING: Setting default 'y_min=%s' "
-                                "so %s probes are hidden"
-                                " --> Use parameter '--y-min %s' to see them", 
-                                y_min_cutoff, hidden_probes.sum(), y.min())
-            y_min = max(y_min_cutoff, tmp_y_min)
+        y_min = max(-5.0, min(y.min() - .1, -.3)) if len(y) else -1.1
     if not y_max:
         y_max = max(.3, y.max() + (.25 if genes else .1)) if len(y) else 1.1
     if x_limits:
@@ -387,6 +376,13 @@ def cnv_on_chromosome(axis, probes, segments, genes, antitarget_marker=None,
     else:
         set_xlim_from(axis, probes, segments)
     setup_chromosome(axis, y_min, y_max, "Copy ratio (log2)")
+    # Check for masked segments:
+    if segments:
+        hidden_seg = (segments.log2 < y_min)
+        if hidden_seg.sum():
+            logging.warning("WARNING: With 'y_min=%s' %s segments are hidden"
+                            " --> Use parameter '--y-min %s' to see them", 
+                            y_min, hidden_seg.sum(), np.floor(segments.log2.min()))
     if genes:
         highlight_genes(axis, genes,
                         min(2.4, y.max() + .1) if len(y) else .1)
@@ -429,12 +425,11 @@ def cnv_on_chromosome(axis, probes, segments, genes, antitarget_marker=None,
                       (row.log2, row.log2),
                       color=color, linewidth=4, solid_capstyle='round', snap=False)
     
-    if hidden_probes.sum():
-        new_y_lim = y_min - 1
-        axis.set_ylim(new_y_lim, y_max)
-        axis.axhline(y=y_min, color='red')
-        for x_hidden_probe in x[hidden_probes]:
-            axis.vlines(x=x_hidden_probe, ymin=y_min, ymax=y_min-0.2, color='red')
+    if segments and hidden_seg.sum():
+        x_hidden = segments.start[hidden_seg] * MB
+        y_hidden = np.array([y_min] * len(x_hidden)) + 0.2
+        axis.scatter(x_hidden, y_hidden, marker='^', linewidth=3, snap=False,
+                     color=segment_color)
     return axis
 
 def snv_on_chromosome(axis, variants, segments, genes, do_trend, by_bin,
