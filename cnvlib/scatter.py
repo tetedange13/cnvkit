@@ -382,7 +382,7 @@ def cnv_on_chromosome(axis, probes, segments, genes, antitarget_marker=None,
         if hidden_seg.sum():
             logging.warning("WARNING: With 'y_min=%s' %s segments are hidden"
                             " --> Use parameter '--y-min %s' to see them", 
-                            y_min, hidden_seg.sum(), np.floor(segments.log2.min()))
+                            y_min, hidden_seg.sum(), int(np.floor(segments.log2.min())))
     if genes:
         highlight_genes(axis, genes,
                         min(2.4, y.max() + .1) if len(y) else .1)
@@ -427,9 +427,9 @@ def cnv_on_chromosome(axis, probes, segments, genes, antitarget_marker=None,
     
     if segments and hidden_seg.sum():
         x_hidden = segments.start[hidden_seg] * MB
-        y_hidden = np.array([y_min] * len(x_hidden)) + 0.2
+        y_hidden = np.array([y_min] * len(x_hidden))
         axis.scatter(x_hidden, y_hidden, marker='^', linewidth=3, snap=False,
-                     color=segment_color)
+                     color=segment_color, edgecolor='none', clip_on=False, zorder=10)
     return axis
 
 def snv_on_chromosome(axis, variants, segments, genes, do_trend, by_bin,
