@@ -17,27 +17,25 @@ SEG_COLOR = 'darkorange'
 TREND_COLOR = '#A0A0A0'
 
 
-def simplify_annot_plot(a_annot_from_bed):
+def simplify_annot_plot(a_annot):
     """
     WRITTEN BY FELIX
     Simplify annotations: "ALK|NM_|1/23" --> "ALK|1/23"
     """
-    if len(a_annot_from_bed.split("|")) == 1: # Case with "--annotate" option where annot=symbol
-        return a_annot_from_bed
+    if len(a_annot.split("|")) == 1: # Case with "--annotate" option where annot=symbol
+        return a_annot
 
-    to_split = a_annot_from_bed
-    if ";" in a_annot_from_bed:
-        tmp_list = [sub_annot for sub_annot in a_annot_from_bed.split(";")
-                                            if "UTR" not in sub_annot]
+    symb_n_exon = lambda x: x.split('|')[0] + "|" + x.split('|')[2]
+    if ";" in a_annot: # Agilent probe on several exons
+        tmp_list = [symb_n_exon(sub_annot) for sub_annot in a_annot.split(";")
+                                           if "UTR" not in sub_annot]
         if len(tmp_list) == 0:
-            return a_annot_from_bed
+            return a_annot
         elif len(tmp_list) == 1:
             to_split = tmp_list[0]
         else:
             return ';'.join(tmp_list)
-
-    splitted_probe = to_split.split("|")
-    return splitted_probe[0] + "|" + splitted_probe[2]
+    return symb_n_exon(a_annot)
 
 
 def do_scatter(cnarr, segments=None, variants=None,
@@ -208,11 +206,24 @@ def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
                           transform=trans)
                 x_pos_txt = int(len(a_probe.start)/2) - 1
                 if x_pos_txt < 0:
-                    print("[DEBUG_FE]: x_pos_txt<0 for", gene_symb, "--> Setting 'x_pos_txt=0'")
+                    #print("[DEBUG_FE]: x_pos_txt<0 for", gene_symb, "--> Setting 'x_pos_txt=0'")
                     x_pos_txt = 0
                 axis.text(a_probe.start.to_list()[x_pos_txt] + x_offset,
                           -0.06, gene_symb, rotation=-45, transform=trans,
                           rotation_mode='anchor', fontsize='x-small')
+
+            # Label each probe with its 'gene name' (i.e. 'name2' col in BED):
+            for i, probe in subprobes.data.iterrows():
+                #if False: # For all/none genes
+                genes2label = ('EGFR', 'ERBB2', 'CTNNB1')
+                if probe.gene.split('|')[0] in genes2label: # To select a subset of genes
+                    print(f"[INFO FE]: Adding labels on probe {probe.gene}")
+                    y_pos = val2plt(probe.log2)
+                    # 'gene' elem of 'probe' obj contains 'SYMB|ex00_00':
+                    str_region = probe.gene
+                    str_region = simplify_annot_plot(probe.gene)
+                    axis.text(x[i], y_pos, str_region, ha="left", va="bottom",
+                              rotation=90, fontsize=6)
 
         if chrom in chrom_segs:
             for seg in chrom_segs[chrom]:
