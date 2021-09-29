@@ -676,6 +676,27 @@ class GenomicArray(object):
         regions = merge(self.data, bp=1)
         return regions.end.sum() - regions.start.sum()
 
+    def _get_gene_map_FEL(self):
+        """Map unique gene names to their indices in this array.
+
+        Returns
+        -------
+        OrderedDict
+            An (ordered) dictionary of unique gene names and the data indices of
+            their segments in the order of occurrence (genomic order).
+        """
+        if 'gene' not in self.data:
+            return OrderedDict()
+        genes = OrderedDict()
+        for idx, genestr in self.data['gene'].iteritems():
+            if pd.isnull(genestr):
+                continue
+            gene = genestr.split('|')[0]
+            if gene not in genes:
+                genes[gene] = []
+            genes[gene].append(idx)
+        return genes
+
     def _get_gene_map(self):
         """Map unique gene names to their indices in this array.
 

@@ -9,6 +9,7 @@ from skgenome.rangelabel import unpack_range
 from . import core, params, plots
 from .plots import MB
 from .cnary import CopyNumArray as CNA
+from sys import stderr
 
 HIGHLIGHT_COLOR = 'gold'
 POINT_COLOR = '#606060'
@@ -16,12 +17,47 @@ SEG_COLOR = 'darkorange'
 TREND_COLOR = '#A0A0A0'
 
 
+def simplify_annot_plot(a_annot_from_bed):
+    """
+    WRITTEN BY FELIX
+    Simplify annotations: "ALK|NM_|1/23" --> "ALK|1/23"
+    """
+    if len(a_annot_from_bed.split("|")) == 1: # Case with "--annotate" option where annot=symbol
+        return a_annot_from_bed
+
+    to_split = a_annot_from_bed
+    if ";" in a_annot_from_bed:
+        tmp_list = [sub_annot for sub_annot in a_annot_from_bed.split(";")
+                                            if "UTR" not in sub_annot]
+        if len(tmp_list) == 0:
+            return a_annot_from_bed
+        elif len(tmp_list) == 1:
+            to_split = tmp_list[0]
+        else:
+            return ';'.join(tmp_list)
+
+    splitted_probe = to_split.split("|")
+    return splitted_probe[0] + "|" + splitted_probe[2]
+
+
 def do_scatter(cnarr, segments=None, variants=None,
                show_range=None, show_gene=None, do_trend=False, by_bin=False,
                window_width=1e6, y_min=None, y_max=None, fig_size=None,
                antitarget_marker=None, segment_color=SEG_COLOR, title=None,
-              ):
+               plot_as_CN=True):
     """Plot probe log2 coverages and segmentation calls together."""
+    simplify_plot = True
+    if simplify_plot:
+        print("[WARNING FE scatter:do_scatter()]: Removing 'antitargets' from 'probes' HERE",
+              file=stderr)
+        not_antitgt = lambda x: x.gene!="Antitarget"
+        cnarr = cnarr.filter(not_antitgt)
+        if segments:
+            print("[WARNING FE scatter:do_scatter()]: Removing 'antitargets' from 'segments' HERE",
+                  file=stderr)
+            not_dash = lambda x: x.gene!="-"
+            segments = segments.filter(not_dash)
+
     if by_bin:
         bp_per_bin = (sum(c.end.iat[-1] for _, c in cnarr.by_chromosome())
                      / len(cnarr))
@@ -35,7 +71,7 @@ def do_scatter(cnarr, segments=None, variants=None,
 
     if not show_gene and not show_range:
         fig = genome_scatter(cnarr, segments, variants, do_trend, y_min, y_max, title,
-                       segment_color)
+                       segment_color, plot_as_CN)
     else:
         if by_bin:
             show_range = show_range_bins
@@ -54,7 +90,8 @@ def do_scatter(cnarr, segments=None, variants=None,
 # === Genome-level scatter plots ===
 
 def genome_scatter(cnarr, segments=None, variants=None, do_trend=False,
-                   y_min=None, y_max=None, title=None, segment_color=SEG_COLOR):
+                   y_min=None, y_max=None, title=None, segment_color=SEG_COLOR,
+                   plot_as_CN=False):
     """Plot all chromosomes, concatenated on one plot."""
     if (cnarr or segments) and variants:
         # Lay out top 3/5 for the CN scatter, bottom 2/5 for SNP plot
@@ -73,7 +110,7 @@ def genome_scatter(cnarr, segments=None, variants=None, do_trend=False,
     if cnarr or segments:
         axis.set_title(title)
         axis = cnv_on_genome(axis, cnarr, segments, do_trend, y_min, y_max,
-                      segment_color)
+                      segment_color, plot_as_CN)
     else:
         axis.set_title("Variant allele frequencies: %s" % title)
         chrom_sizes = collections.OrderedDict(
@@ -85,11 +122,16 @@ def genome_scatter(cnarr, segments=None, variants=None, do_trend=False,
 
 
 def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
-                  y_max=None, segment_color=SEG_COLOR):
+                  y_max=None, segment_color=SEG_COLOR, plot_as_CN=False):
     """Plot bin ratios and/or segments for all chromosomes on one plot."""
     # Configure axes etc.
-    axis.axhline(color='k')
-    axis.set_ylabel("Copy ratio (log2)")
+    if plot_as_CN:
+        axis.axhline(2, color='k')
+        axis.set_ylabel("Copy number (ref=diploid=2)")
+    else:
+        axis.axhline(color='k')
+        axis.set_ylabel("Copy ratio (log2)")
+
     if not (y_min and y_max):
         if segments:
             # Auto-scale y-axis according to segment mean-coverage values
@@ -107,7 +149,11 @@ def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
                 y_min = -2.5
             if not y_max:
                 y_max = 2.5
-    axis.set_ylim(y_min, y_max)
+    if plot_as_CN:
+        axis.set_ylim(0, 2*2**y_max) # Works only if 'nb_copies' mode
+    else:
+        axis.set_ylim(y_min, y_max)
+
 
     # Group probes by chromosome (to calculate plotting coordinates)
     if probes:
@@ -123,14 +169,26 @@ def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
         chrom_sizes = plots.chromosome_sizes(segments)
     # Same for segment calls
     chrom_segs = dict(segments.by_chromosome()) if segments else {}
+    # Addings to draw bottom colored segments with gene name:
+    gene_symbs = [x for x,_ in probes.by_gene_FEL()]
+    list_colors = ['orange' if i%2==0 else 'pink' for i in range(len(gene_symbs))]
+    dict_colors = {gene_symbs[i]:list_colors[i] for i in range(len(list_colors))}
 
     # Plot points & segments
     x_starts = plots.plot_chromosome_dividers(axis, chrom_sizes)
+    if plot_as_CN:
+        val2plt = lambda x: 2 * 2 ** x
+    else:
+        val2plt = lambda x: x
+
     for chrom, x_offset in x_starts.items():
         if probes and chrom in chrom_probes:
             subprobes = chrom_probes[chrom]
+            if 'weight' in subprobes:
+                s_weight = 200 * subprobes['weight'] ** 2 + 2
+
             x = 0.5 * (subprobes['start'] + subprobes['end']) + x_offset
-            axis.scatter(x, subprobes['log2'], marker='.',
+            axis.scatter(x, val2plt(subprobes['log2']), s=s_weight, marker='.',
                          color=POINT_COLOR, edgecolor='none', alpha=0.2)
             if do_trend:
                 # ENH break trendline by chromosome arm boundaries?
@@ -138,13 +196,32 @@ def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
                 # disappearing when saving as PNG. See also https://github.com/etal/cnvkit/issues/604.
                 axis.plot(x, subprobes.smooth_log2(), color=POINT_COLOR, linewidth=2, zorder=-1, snap=False)
 
+            # Add custom-segs for genes + associated gene_symb below x-axis:
+            import matplotlib.transforms as transforms
+            # 'blended' means smthg fixed no matter data limits:
+            trans = transforms.blended_transform_factory(axis.transData, axis.transAxes)
+            #trans = axis.get_xaxis_transform()  # Synonym for what's above
+            for gene_symb, a_probe in subprobes.by_gene_FEL():
+                axis.plot((a_probe.start + x_offset, a_probe.end + x_offset),
+                          (-0.01, -0.01), clip_on=False, linewidth=4, # Opt. 'clip_on' to display bottom segs
+                          color=dict_colors[gene_symb], solid_capstyle='round',
+                          transform=trans)
+                x_pos_txt = int(len(a_probe.start)/2) - 1
+                if x_pos_txt < 0:
+                    print("[DEBUG_FE]: x_pos_txt<0 for", gene_symb, "--> Setting 'x_pos_txt=0'")
+                    x_pos_txt = 0
+                axis.text(a_probe.start.to_list()[x_pos_txt] + x_offset,
+                          -0.06, gene_symb, rotation=-45, transform=trans,
+                          rotation_mode='anchor', fontsize='x-small')
+
         if chrom in chrom_segs:
             for seg in chrom_segs[chrom]:
                 color = choose_segment_color(seg, segment_color)
                 axis.plot((seg.start + x_offset, seg.end + x_offset),
-                          (seg.log2, seg.log2),
+                          (val2plt(seg.log2), val2plt(seg.log2)),
                           color=color, linewidth=3, solid_capstyle='round', snap=False)
     return axis
+
 
 def snv_on_genome(axis, variants, chrom_sizes, segments, do_trend, segment_color):
     """Plot a scatter-plot of SNP chromosomal positions and shifts."""

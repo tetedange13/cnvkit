@@ -940,6 +940,7 @@ def _cmd_scatter(args):
         ("fig_size", args.fig_size),
         ("antitarget_marker", args.antitarget_marker),
         ("segment_color", args.segment_color),
+        ("plot_as_CN", True),
     ) if v is not None}
 
     if args.range_list:

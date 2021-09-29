@@ -61,6 +61,35 @@ class CopyNumArray(GenomicArray):
 
     # Traversal
 
+    def by_gene_FEL(self, ignore=params.IGNORE_GENE_NAMES):
+        """
+        """
+        ignore += params.ANTITARGET_ALIASES
+        for _chrom, subgary in self.by_chromosome():
+            prev_idx = 0
+            for gene, gene_idx in subgary._get_gene_map_FEL().items():
+                if gene not in ignore:
+                    if not len(gene_idx):
+                        logging.warning("Specified gene name somehow missing: "
+                                        "%s", gene)
+                        continue
+                    start_idx = gene_idx[0]
+                    end_idx = gene_idx[-1] + 1
+                    if prev_idx < start_idx:
+                        # Include intergenic regions
+                        #print("TOTO: SKIP adding 'Antitarget'")  # DEBUG
+                        pass
+                        #yield params.ANTITARGET_NAME, subgary.as_dataframe(
+                        #        subgary.data.loc[prev_idx:start_idx])
+                    yield gene, subgary.as_dataframe(
+                            subgary.data.loc[start_idx:end_idx])
+                    prev_idx = end_idx
+            if prev_idx < len(subgary) - 1:
+                # Include the telomere
+                print("TOTO2: Adding 'Antitarget'")
+                yield params.ANTITARGET_NAME, subgary.as_dataframe(
+                        subgary.data.loc[prev_idx:])
+
     def by_gene(self, ignore=params.IGNORE_GENE_NAMES):
         """Iterate over probes grouped by gene name.
 
