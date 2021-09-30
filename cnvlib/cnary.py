@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import median_test
 from skgenome import GenomicArray
+from sys import stderr
 
 from . import core, descriptives, params, smoothing
 from .segmetrics import segment_mean
@@ -64,6 +65,7 @@ class CopyNumArray(GenomicArray):
     def by_gene_FEL(self, ignore=params.IGNORE_GENE_NAMES):
         """
         """
+        print("[WARNING_FE cnary:by_gene()]: Usin custom method HERE", file=stderr)
         ignore += params.ANTITARGET_ALIASES
         for _chrom, subgary in self.by_chromosome():
             prev_idx = 0

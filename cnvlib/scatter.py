@@ -51,7 +51,7 @@ def do_scatter(cnarr, segments=None, variants=None,
         not_antitgt = lambda x: x.gene!="Antitarget"
         cnarr = cnarr.filter(not_antitgt)
         if segments:
-            print("[WARNING FE scatter:do_scatter()]: Removing 'antitargets' from 'segments' HERE",
+            print("[WARNING_FE scatter:do_scatter()]: Removing 'antitargets' from 'segments' HERE",
                   file=stderr)
             not_dash = lambda x: x.gene!="-"
             segments = segments.filter(not_dash)
@@ -222,7 +222,7 @@ def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
                     # 'gene' elem of 'probe' obj contains 'SYMB|ex00_00':
                     str_region = probe.gene
                     str_region = simplify_annot_plot(probe.gene)
-                    axis.text(x[i], y_pos, str_region, ha="left", va="bottom",
+                    axis.text(x[i]-0.3, y_pos, str_region, ha="left", va="bottom",
                               rotation=90, fontsize=6)
 
         if chrom in chrom_segs:

@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
+from sys import stderr
 
 from .chromsort import sorter_chrom
 from .intersect import by_ranges, into_ranges, iter_ranges, iter_slices
@@ -685,6 +686,8 @@ class GenomicArray(object):
             An (ordered) dictionary of unique gene names and the data indices of
             their segments in the order of occurrence (genomic order).
         """
+        # print("[WARNING_FE skgenome:gary:_get_gene_map()]: Usin custom method HERE",
+        #       file=stderr)
         if 'gene' not in self.data:
             return OrderedDict()
         genes = OrderedDict()
