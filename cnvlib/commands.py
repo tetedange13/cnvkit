@@ -940,7 +940,7 @@ def _cmd_scatter(args):
         ("fig_size", args.fig_size),
         ("antitarget_marker", args.antitarget_marker),
         ("segment_color", args.segment_color),
-        ("plot_as_CN", True),
+        ("yaxis_as_CN", args.yaxis_as_CN),
     ) if v is not None}
 
     if args.range_list:
@@ -994,6 +994,9 @@ P_scatter.add_argument('-w', '--width', type=float, default=1e6,
         help="""Width of margin to show around the selected gene(s) (-g/--gene)
                 or small chromosomal region (-c/--chromosome).
                 [Default: %(default)d]""")
+P_scatter.add_argument('--yaxis-as-CN', action="store_true",
+        help="""If set, y-axis will be Copy Number instead of log_ratio 
+                (transform=2*2**log_val)""")
 P_scatter.add_argument('-o', '--output', metavar="FILENAME",
         help="Output PDF file name.")
 

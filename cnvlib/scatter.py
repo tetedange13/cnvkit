@@ -42,7 +42,7 @@ def do_scatter(cnarr, segments=None, variants=None,
                show_range=None, show_gene=None, do_trend=False, by_bin=False,
                window_width=1e6, y_min=None, y_max=None, fig_size=None,
                antitarget_marker=None, segment_color=SEG_COLOR, title=None,
-               plot_as_CN=True):
+               yaxis_as_CN=True):
     """Plot probe log2 coverages and segmentation calls together."""
     simplify_plot = True
     if simplify_plot:
@@ -69,7 +69,7 @@ def do_scatter(cnarr, segments=None, variants=None,
 
     if not show_gene and not show_range:
         fig = genome_scatter(cnarr, segments, variants, do_trend, y_min, y_max, title,
-                       segment_color, plot_as_CN)
+                       segment_color, yaxis_as_CN)
     else:
         if by_bin:
             show_range = show_range_bins
@@ -89,7 +89,7 @@ def do_scatter(cnarr, segments=None, variants=None,
 
 def genome_scatter(cnarr, segments=None, variants=None, do_trend=False,
                    y_min=None, y_max=None, title=None, segment_color=SEG_COLOR,
-                   plot_as_CN=False):
+                   yaxis_as_CN=False):
     """Plot all chromosomes, concatenated on one plot."""
     if (cnarr or segments) and variants:
         # Lay out top 3/5 for the CN scatter, bottom 2/5 for SNP plot
@@ -108,7 +108,7 @@ def genome_scatter(cnarr, segments=None, variants=None, do_trend=False,
     if cnarr or segments:
         axis.set_title(title)
         axis = cnv_on_genome(axis, cnarr, segments, do_trend, y_min, y_max,
-                      segment_color, plot_as_CN)
+                      segment_color, yaxis_as_CN)
     else:
         axis.set_title("Variant allele frequencies: %s" % title)
         chrom_sizes = collections.OrderedDict(
@@ -120,10 +120,10 @@ def genome_scatter(cnarr, segments=None, variants=None, do_trend=False,
 
 
 def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
-                  y_max=None, segment_color=SEG_COLOR, plot_as_CN=False):
+                  y_max=None, segment_color=SEG_COLOR, yaxis_as_CN=False):
     """Plot bin ratios and/or segments for all chromosomes on one plot."""
     # Configure axes etc.
-    if plot_as_CN:
+    if yaxis_as_CN:
         axis.axhline(2, color='k')
         axis.set_ylabel("Copy number (ref=diploid=2)")
     else:
@@ -147,7 +147,7 @@ def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
                 y_min = -2.5
             if not y_max:
                 y_max = 2.5
-    if plot_as_CN:
+    if yaxis_as_CN:
         axis.set_ylim(0, 2*2**y_max) # Works only if 'nb_copies' mode
     else:
         axis.set_ylim(y_min, y_max)
@@ -174,7 +174,7 @@ def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
 
     # Plot points & segments
     x_starts = plots.plot_chromosome_dividers(axis, chrom_sizes)
-    if plot_as_CN:
+    if yaxis_as_CN:
         val2plt = lambda x: 2 * 2 ** x
     else:
         val2plt = lambda x: x
