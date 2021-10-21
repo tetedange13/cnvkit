@@ -194,7 +194,7 @@ def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
             # Label each probe with its 'gene name' (i.e. 'name2' col in BED):
             for i, probe in subprobes.data.iterrows():
                 #if False: # For all/none genes
-                genes2label = ('EGFR', 'ERBB2', 'CTNNB1')
+                genes2label = ('EGFR', 'ERBB2', 'CTNNB1', 'BRAF')
                 if probe.gene.split('|')[0] in genes2label: # To select a subset of genes
                     print(f"[INFO FE]: Adding labels on probe {probe.gene}")
                     y_pos = val2plt(probe.log2)
