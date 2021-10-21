@@ -4,6 +4,7 @@ import logging
 
 import numpy as np
 import pandas as pd
+from sys import stderr
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 
@@ -22,8 +23,19 @@ def cna2df(cna, do_desaturate):
 def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False, 
                delim_sampl=False, vertical=False, ax=None):
     """Plot copy number for multiple samples as a heatmap."""
+    simplify = True
+    if simplify:
+        wanted_genes = "NRAS|MET|KRAS|ERBB2|EGFR|CTNNB1|PIK3CA|ALK|FGFR2|FGFR3|PDGFRA|KIT"
+        wanted_genes += "|HRAS|PTEN"
+        print("[WARNING_FE heatmap:do_heatmap()]: Keppin only wanted genes HERE\n"
+              "(paddin between each chrom is also further set to '0')\n"
+              f"{wanted_genes=}", file=stderr)
+        list_wanted = wanted_genes.split('|')
+        keepin_wanted = lambda x: x.gene.split('|')[0] in list_wanted
+        cnarrs = [a_cnarr.filter(keepin_wanted) for a_cnarr in cnarrs]
+
     if ax is None:
-        _fig, axis = plt.subplots()
+        _fig, axis = plt.subplots(figsize=(19,9))
     else:
         axis = ax
 
@@ -85,6 +97,7 @@ def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False,
                 chrom_sizes[chrom] = max(subcna.end.iat[-1] if subcna else 0,
                                          chrom_sizes.get(r_chrom, 0))
 
+    saved_cnarr = cnarr  # Used later to plot probe_names below x-axis
     dict_log2 = collections.OrderedDict()
     if show_range:
         # Lay out only the selected chromosome
@@ -117,7 +130,8 @@ def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False,
     else:
         # Lay out chromosome dividers and x-axis labels
         # (Just enough padding to avoid overlap with the divider line)
-        chrom_offsets = plots.plot_chromosome_dividers(axis, chrom_sizes, 1, along='y' if vertical else 'x')
+        # FELIX_MODIF (set 'pad=0' instead of 'pad=1'):
+        chrom_offsets = plots.plot_chromosome_dividers(axis, chrom_sizes, 0, along='y' if vertical else 'x')
         # Plot the individual probe/segment coverages
         for i, sample in enumerate(sample_data):
             all_crows = []
@@ -170,4 +184,14 @@ def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False,
             delim_method(i, color='k')
     
     axis.invert_yaxis()
+
+    # Add corresponding probe_name below x-axis:
+    import matplotlib.transforms as transforms
+    # 'blended' means smthg fixed no matter data limits:
+    trans = transforms.blended_transform_factory(axis.transData, axis.transAxes)
+    # If 'saved_cnarr' has missing regions, some labels can be missing too
+    for i, a_row in saved_cnarr.data.iterrows():
+        axis.text(a_row.start + chrom_offsets[a_row.chromosome], -0.04,
+                  a_row.gene, rotation=-45, transform=trans,
+                  rotation_mode='anchor')
     return axis
