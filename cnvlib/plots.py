@@ -295,3 +295,24 @@ def gene_coords_by_range(probes, chrom, start, end,
     # Reorganize the data structure
     return {chrom: [(gstart, gend, name)
                     for name, (gstart, gend) in list(genes.items())]}
+
+
+def simplify_annot(a_annot):
+    """
+    WRITTEN BY FELIX
+    Simplify annotations: "ALK|NM_|1/23" --> "ALK|1/23"
+    """
+    if len(a_annot.split("|")) == 1: # Case with "--annotate" option where annot=symbol
+        return a_annot
+
+    symb_n_exon = lambda x: x.split('|')[0] + "|" + x.split('|')[2]
+    if ";" in a_annot: # Agilent probe on several exons
+        tmp_list = [symb_n_exon(sub_annot) for sub_annot in a_annot.split(";")
+                                           if "UTR" not in sub_annot]
+        if len(tmp_list) == 0:
+            return a_annot
+        elif len(tmp_list) == 1:
+            to_split = tmp_list[0]
+        else:
+            return ';'.join(tmp_list)
+    return symb_n_exon(a_annot)

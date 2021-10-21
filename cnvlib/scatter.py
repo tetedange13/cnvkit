@@ -17,27 +17,6 @@ SEG_COLOR = 'darkorange'
 TREND_COLOR = '#A0A0A0'
 
 
-def simplify_annot_plot(a_annot):
-    """
-    WRITTEN BY FELIX
-    Simplify annotations: "ALK|NM_|1/23" --> "ALK|1/23"
-    """
-    if len(a_annot.split("|")) == 1: # Case with "--annotate" option where annot=symbol
-        return a_annot
-
-    symb_n_exon = lambda x: x.split('|')[0] + "|" + x.split('|')[2]
-    if ";" in a_annot: # Agilent probe on several exons
-        tmp_list = [symb_n_exon(sub_annot) for sub_annot in a_annot.split(";")
-                                           if "UTR" not in sub_annot]
-        if len(tmp_list) == 0:
-            return a_annot
-        elif len(tmp_list) == 1:
-            to_split = tmp_list[0]
-        else:
-            return ';'.join(tmp_list)
-    return symb_n_exon(a_annot)
-
-
 def do_scatter(cnarr, segments=None, variants=None,
                show_range=None, show_gene=None, do_trend=False, by_bin=False,
                window_width=1e6, y_min=None, y_max=None, fig_size=None,
@@ -198,7 +177,7 @@ def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
             import matplotlib.transforms as transforms
             # 'blended' means smthg fixed no matter data limits:
             trans = transforms.blended_transform_factory(axis.transData, axis.transAxes)
-            #trans = axis.get_xaxis_transform()  # Synonym for what's above
+            #trans = axis.get_xaxis_transform()  # Synonym for what's above ?
             for gene_symb, a_probe in subprobes.by_gene_FEL():
                 axis.plot((a_probe.start + x_offset, a_probe.end + x_offset),
                           (-0.01, -0.01), clip_on=False, linewidth=4, # Opt. 'clip_on' to display bottom segs
@@ -221,7 +200,7 @@ def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
                     y_pos = val2plt(probe.log2)
                     # 'gene' elem of 'probe' obj contains 'SYMB|ex00_00':
                     str_region = probe.gene
-                    str_region = simplify_annot_plot(probe.gene)
+                    str_region = plots.simplify_annot(probe.gene)
                     axis.text(x[i]-0.3, y_pos, str_region, ha="left", va="bottom",
                               rotation=90, fontsize=6)
 

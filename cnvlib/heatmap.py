@@ -192,6 +192,6 @@ def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False,
     # If 'saved_cnarr' has missing regions, some labels can be missing too
     for i, a_row in saved_cnarr.data.iterrows():
         axis.text(a_row.start + chrom_offsets[a_row.chromosome], -0.04,
-                  a_row.gene, rotation=-45, transform=trans,
-                  rotation_mode='anchor')
+                  plots.simplify_annot(a_row.gene),
+                  rotation=-45, transform=trans, rotation_mode='anchor')
     return axis
