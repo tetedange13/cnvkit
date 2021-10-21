@@ -12,12 +12,13 @@ from skgenome.rangelabel import unpack_range
 from . import plots
 
 
-def cna2df(cna, do_desaturate):
+def OLD_cna2df(cna, do_desaturate):
     """Extract a dataframe of plotting points from a CopyNumArray."""
     points = cna.data.loc[:, ['start', 'end']]
     points['color'] = cna.log2.apply(plots.cvg2rgb, args=(do_desaturate,))
     points['log2'] = cna.log2
     return points
+cna2df = lambda cna: cna.data.loc[:, ['start', 'end', 'log2']]
 
 
 def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False, 
@@ -25,8 +26,18 @@ def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False,
     """Plot copy number for multiple samples as a heatmap."""
     simplify = True
     if simplify:
-        wanted_genes = "NRAS|MET|KRAS|ERBB2|EGFR|CTNNB1|PIK3CA|ALK|FGFR2|FGFR3|PDGFRA|KIT"
-        wanted_genes += "|HRAS|PTEN"
+        alt_genes = 'no'  # 'both' -> Show 'normal' + 'alt' genes ; 'alt'
+        possible_alt_flags = ('no', 'both', 'alt')
+        assert alt_genes in possible_alt_flags, f"{alt_genes=} instead being one of: {possible_alt_flags}"
+
+        wanted_genes1 = "NRAS|MET|KRAS|ERBB2|EGFR|CTNNB1|PIK3CA|PDGFRA"
+        wanted_genes2 = "FGFR2|FGFR3|KIT|ALK|HRAS|PTEN"
+        if alt_genes == 'alt':
+            wanted_genes = wanted_genes2
+        elif alt_genes == 'both':
+            wanted_genes = wanted_genes1 + '|' + wanted_genes2
+        else:
+            wanted_genes = wanted_genes1  # Default = 'classic' genes only
         print("[WARNING_FE heatmap:do_heatmap()]: Keppin only wanted genes HERE\n"
               "(paddin between each chrom is also further set to '0')\n"
               f"{wanted_genes=}", file=stderr)
@@ -88,16 +99,15 @@ def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False,
 
         if r_chrom:
             subcna = cnarr.in_range(r_chrom, r_start, r_end, mode='trim')
-            sample_data[i][r_chrom] = cna2df(subcna, do_desaturate)
+            sample_data[i][r_chrom] = cna2df(subcna)
             chrom_sizes[r_chrom] = max(subcna.end.iat[-1] if subcna else 0,
                                        chrom_sizes.get(r_chrom, 0))
         else:
             for chrom, subcna in cnarr.by_chromosome():
-                sample_data[i][chrom] = cna2df(subcna, do_desaturate)
+                sample_data[i][chrom] = cna2df(subcna)
                 chrom_sizes[chrom] = max(subcna.end.iat[-1] if subcna else 0,
                                          chrom_sizes.get(r_chrom, 0))
 
-    saved_cnarr = cnarr  # Used later to plot probe_names below x-axis
     dict_log2 = collections.OrderedDict()
     if show_range:
         # Lay out only the selected chromosome
@@ -189,9 +199,19 @@ def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False,
     import matplotlib.transforms as transforms
     # 'blended' means smthg fixed no matter data limits:
     trans = transforms.blended_transform_factory(axis.transData, axis.transAxes)
-    # If 'saved_cnarr' has missing regions, some labels can be missing too
-    for i, a_row in saved_cnarr.data.iterrows():
-        axis.text(a_row.start + chrom_offsets[a_row.chromosome], -0.04,
-                  plots.simplify_annot(a_row.gene),
-                  rotation=-45, transform=trans, rotation_mode='anchor')
+
+    for j, a_cnarr in enumerate(cnarrs):
+        if by_bin:
+            a_cnarr = plots.update_binwise_positions_simple(a_cnarr)
+
+        for _, a_probe in a_cnarr.data.iterrows():
+            x_coord = a_probe.start + chrom_offsets[a_probe.chromosome]
+            if abs(a_probe.log2) >= 0.49:
+                axis.text(x_coord, j + 0.75, str(round(a_probe.log2, 2)),
+                          color='gold', rotation=30)
+
+            if j != 0: continue  # Need to do it once
+            # Else, add probe_names below x-axis:
+            axis.text(x_coord + 0.3, -0.04, plots.simplify_annot(a_probe.gene),
+                      rotation=-45, transform=trans, rotation_mode='anchor')
     return axis
