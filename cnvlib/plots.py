@@ -302,7 +302,9 @@ def simplify_annot(a_annot):
     WRITTEN BY FELIX
     Simplify annotations: "ALK|NM_|1/23" --> "ALK|1/23"
     """
-    if len(a_annot.split("|")) == 1: # Case with "--annotate" option where annot=symbol
+    if len(a_annot.split("|")) == 1:  # Case with "--annotate" option where annot=symbol
+        return a_annot
+    elif "chr" in a_annot:  # Case for ONCOGENET intronic regions called: 'MSH2|chr2:47702958-47702958'
         return a_annot
 
     symb_n_exon = lambda x: x.split('|')[0] + "|" + x.split('|')[2]
