@@ -297,6 +297,14 @@ def gene_coords_by_range(probes, chrom, start, end,
                     for name, (gstart, gend) in list(genes.items())]}
 
 
+def symb_n_exon(a_sub_annot):
+    split_annot = a_sub_annot.split('|')
+    if len(split_annot) >= 3:
+        annot_returned = split_annot[0] + "|" + split_annot[2]
+        return annot_returned
+    return a_sub_annot
+
+
 def simplify_annot(a_annot):
     """
     WRITTEN BY FELIX
@@ -307,7 +315,6 @@ def simplify_annot(a_annot):
     elif "chr" in a_annot:  # Case for ONCOGENET intronic regions called: 'MSH2|chr2:47702958-47702958'
         return a_annot
 
-    symb_n_exon = lambda x: x.split('|')[0] + "|" + x.split('|')[2]
     if ";" in a_annot: # Agilent probe on several exons
         tmp_list = [symb_n_exon(sub_annot) for sub_annot in a_annot.split(";")
                                            if "UTR" not in sub_annot]
@@ -318,3 +325,4 @@ def simplify_annot(a_annot):
         else:
             return ';'.join(tmp_list)
     return symb_n_exon(a_annot)
+
