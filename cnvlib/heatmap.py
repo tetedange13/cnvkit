@@ -32,7 +32,7 @@ def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False,
 
         wanted_genes1 = "NRAS|MET|KRAS|ERBB2|EGFR|CTNNB1|PIK3CA|BRAF"
         #wanted_genes1 = "MSH2|EPCAM|ERBB2|PIK3CA"  # ONCOGENET genes
-        wanted_genes2 = "FGFR2|FGFR3|PDGFRA|KIT|ALK|HRAS|PTEN|CDKN2A"
+        wanted_genes2 = "FGFR2|FGFR3|PDGFRA|KIT|ALK|HRAS|PTEN|CDKN2A|TP53"
         if alt_genes == 'alt':
             wanted_genes = wanted_genes2
         elif alt_genes == 'both':
@@ -40,7 +40,7 @@ def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False,
         else:
             wanted_genes = wanted_genes1  # Default = 'classic' genes only
         print("[WARNING_FE heatmap:do_heatmap()]: Keppin only wanted genes HERE\n"
-              "(paddin between each chrom is also further set to '0')\n"
+              "(padding between each chrom is also further set to '0')\n"
               f"{wanted_genes=}", file=stderr)
         list_wanted = wanted_genes.split('|')
         keepin_wanted = lambda x: x.gene.split('|')[0] in list_wanted

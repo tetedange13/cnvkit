@@ -25,12 +25,12 @@ def do_scatter(cnarr, segments=None, variants=None,
     """Plot probe log2 coverages and segmentation calls together."""
     simplify_plot = True
     if simplify_plot:
-        print("[WARNING FE scatter:do_scatter()]: Removing 'antitargets' from 'probes' HERE",
+        print("[WARN_FE scatter:do_scatter()]: Removing 'antitargets' from 'probes' HERE",
               file=stderr)
         not_antitgt = lambda x: x.gene!="Antitarget"
         cnarr = cnarr.filter(not_antitgt)
         if segments:
-            print("[WARNING_FE scatter:do_scatter()]: Removing 'antitargets' from 'segments' HERE",
+            print("[WARN_FE scatter:do_scatter()]: Removing 'antitargets' from 'segments' HERE",
                   file=stderr)
             not_dash = lambda x: x.gene!="-"
             segments = segments.filter(not_dash)
@@ -194,9 +194,10 @@ def cnv_on_genome(axis, probes, segments, do_trend=False, y_min=None,
             # Label each probe with its 'gene name' (i.e. 'name2' col in BED):
             for i, probe in subprobes.data.iterrows():
                 #if False: # For all/none genes
-                genes2label = ('KRAS', 'EGFR', 'ERBB2', 'CTNNB1', 'BRAF', 'PDGFRA', 'IDH1', 'NRAS')
+                str2label = "KRAS|EGFR|ERBB2|CTNNB1|BRAF|PDGFRA|KIT|IDH1|NRAS|TP53"
+                genes2label = str2label.split('|')
                 if probe.gene.split('|')[0] in genes2label: # To select a subset of genes
-                    print(f"[INFO FE]: Adding labels on probe {probe.gene}")
+                    #print(f"[INFO FE]: Adding labels on probe {probe.gene}")  # DEBUG
                     y_pos = val2plt(probe.log2)
                     # 'gene' elem of 'probe' obj contains 'SYMB|ex00_00':
                     str_region = probe.gene
