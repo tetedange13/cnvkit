@@ -46,7 +46,7 @@ def plot_chromosome_dividers(axis, chrom_sizes, pad=None, along='x'):
     if along == 'x':
         axis.set_xlim(0, curr_offset)
         for xposn in dividers[:-1]:
-            axis.axvline(x=xposn, color='k')
+            axis.axvline(x=xposn, color='grey')
         # Use chromosome names as x-axis labels (instead of base positions)
         axis.set_xticks(centers)
         axis.set_xticklabels(list(chrom_sizes.keys()), rotation=45)
@@ -56,7 +56,7 @@ def plot_chromosome_dividers(axis, chrom_sizes, pad=None, along='x'):
     else:
         axis.set_ylim(0, curr_offset)
         for yposn in dividers[:-1]:
-            axis.axhline(y=yposn, color='k')
+            axis.axhline(y=yposn, color='grey')
         # Use chromosome names as y-axis labels (instead of base positions)
         axis.set_yticks(centers)
         axis.set_yticklabels(list(chrom_sizes.keys()))
