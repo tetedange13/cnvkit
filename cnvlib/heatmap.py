@@ -33,6 +33,7 @@ def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False,
         wanted_genes1 = "NRAS|MET|KRAS|ERBB2|EGFR|CTNNB1|PIK3CA|BRAF"
         #wanted_genes1 = "MSH2|EPCAM|ERBB2|PIK3CA"  # ONCOGENET genes
         wanted_genes2 = "FGFR2|FGFR3|PDGFRA|KIT|ALK|HRAS|PTEN|CDKN2A|TP53"
+        #wanted_genes2 = "BRCA1|BRCA2"  # ONCOGENET genes
         if alt_genes == 'alt':
             wanted_genes = wanted_genes2
         elif alt_genes == 'both':
