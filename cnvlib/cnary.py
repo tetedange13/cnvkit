@@ -65,7 +65,7 @@ class CopyNumArray(GenomicArray):
     def by_gene_FEL(self, ignore=params.IGNORE_GENE_NAMES):
         """
         """
-        print("[WARNING_FE cnary:by_gene()]: Usin custom method HERE", file=stderr)
+        #print("[WARNING_FE cnary:by_gene()]: Usin custom method HERE", file=stderr)
         ignore += params.ANTITARGET_ALIASES
         for _chrom, subgary in self.by_chromosome():
             prev_idx = 0
