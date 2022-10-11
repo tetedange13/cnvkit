@@ -30,7 +30,7 @@ def do_scatter(cnarr, segments=None, variants=None,
         not_antitgt = lambda x: x.gene!="Antitarget"
         cnarr = cnarr.filter(not_antitgt)
         if segments:
-            print("[WARN_FE scatter:do_scatter()]: Removing 'antitargets' from 'segments' HERE",
+            print("[WARN_FELIX scatter:do_scatter()]: Removing 'antitargets' from 'segments' HERE",
                   file=stderr)
             not_dash = lambda x: x.gene!="-"
             segments = segments.filter(not_dash)
