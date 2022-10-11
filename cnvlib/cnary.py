@@ -64,6 +64,8 @@ class CopyNumArray(GenomicArray):
 
     def by_gene_FEL(self, ignore=params.IGNORE_GENE_NAMES):
         """
+        Clone of 'by_gene' method, but using a custom '_get_gene_map' method
+        Able to parse region names such as 'SYMB|TRANSCRIPT|EXON_NB'
         """
         #print("[WARN_FELIX cnary:by_gene()]: Usin custom method HERE", file=stderr)
         ignore += params.ANTITARGET_ALIASES
@@ -88,7 +90,6 @@ class CopyNumArray(GenomicArray):
                     prev_idx = end_idx
             if prev_idx < len(subgary) - 1:
                 # Include the telomere
-                print("TOTO2: Adding 'Antitarget'")
                 yield params.ANTITARGET_NAME, subgary.as_dataframe(
                         subgary.data.loc[prev_idx:])
 
