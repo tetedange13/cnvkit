@@ -40,7 +40,7 @@ def do_heatmap(cnarrs, show_range=None, do_desaturate=False, by_bin=False,
             wanted_genes = wanted_genes1 + '|' + wanted_genes2
         else:
             wanted_genes = wanted_genes1  # Default = 'classic' genes only
-        print("[WARNING_FE heatmap:do_heatmap()]: Keppin only wanted genes HERE\n"
+        print("[WARN_FELIX heatmap:do_heatmap()]: Keppin only wanted genes HERE\n"
               "(padding between each chrom is also further set to '0')\n"
               f"{wanted_genes=}", file=stderr)
         list_wanted = wanted_genes.split('|')

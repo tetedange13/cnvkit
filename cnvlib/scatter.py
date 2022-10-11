@@ -25,7 +25,7 @@ def do_scatter(cnarr, segments=None, variants=None,
     """Plot probe log2 coverages and segmentation calls together."""
     simplify_plot = True
     if simplify_plot:
-        print("[WARN_FE scatter:do_scatter()]: Removing 'antitargets' from 'probes' HERE",
+        print("[WARN_FELIX scatter:do_scatter()]: Removing 'antitargets' from 'probes' HERE",
               file=stderr)
         not_antitgt = lambda x: x.gene!="Antitarget"
         cnarr = cnarr.filter(not_antitgt)
